@@ -1,31 +1,25 @@
 import { useRef, useState } from 'react'
-import domToImage from "dom-to-image-more";
 
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import { usePrintScreen } from './hooks/usePrintScreen'
+import { downloadFromUrl } from './utils/downloadFromUrl'
 
 function App() {
+  const ref = useRef<HTMLDivElement>(null)
+
   const [count, setCount] = useState(0)
-  const ref = useRef(null)
+
+  const { captureScreen } = usePrintScreen(ref);
 
   const handleCapture = async () => {
-    if (!ref.current) return;
+    const blob = await captureScreen();
+    if (!blob) return;
 
-    try {
-        const blob = await domToImage.toBlob(ref.current);
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "captura.png";
-        a.click();
-
-        URL.revokeObjectURL(url); // limpa depois
-    } catch (err) {
-        console.error("Erro ao gerar imagem:", err);
-    }
-  };
+    const url = URL.createObjectURL(blob);
+    downloadFromUrl(url, `screenshot-${new Date().toISOString()}.png`);
+  }
 
   return (
     <div ref={ref} style={{ width: "100%", height: "100%" }}>
